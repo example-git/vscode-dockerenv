@@ -1,4 +1,4 @@
-GPT2 bot that runs on discord.py 2.2, Also capable of training data files if needed. 
+GPT2 bot that runs on discord.py 2.1, Also capable of training data files if needed. 
 
 Install at your own risk. Tensor, pytorch, etc can all be really finnicky between OS/deployments. 
 
