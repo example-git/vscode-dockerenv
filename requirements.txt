@@ -1,0 +1,6 @@
+aitextgen==0.6.0
+configparser==5.3.0
+asyncio==3.4.3
+discord==2.1.0
+pytorch-lightning==1.7.7
+torch==1.13.0

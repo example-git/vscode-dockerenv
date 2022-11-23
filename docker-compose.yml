@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  gpt2-discord:
+    image: gpt2-discord
+    build:
+      context: .
+      dockerfile: ./Dockerfile
