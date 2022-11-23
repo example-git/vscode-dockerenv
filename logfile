@@ -1,0 +1,24 @@
+2022-11-23 03:24:09.709 EST [27896] LOG:  starting PostgreSQL 12.9, compiled by Visual C++ build 1916, 64-bit
+2022-11-23 03:24:09.712 EST [27896] LOG:  could not bind IPv6 address "::1": Permission denied
+2022-11-23 03:24:09.712 EST [27896] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2022-11-23 03:24:09.712 EST [27896] LOG:  could not bind IPv4 address "127.0.0.1": Permission denied
+2022-11-23 03:24:09.712 EST [27896] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2022-11-23 03:24:09.712 EST [27896] WARNING:  could not create listen socket for "localhost"
+2022-11-23 03:24:09.712 EST [27896] FATAL:  could not create any TCP/IP sockets
+2022-11-23 03:24:09.712 EST [27896] LOG:  database system is shut down
+2022-11-23 03:24:16.317 EST [79380] LOG:  starting PostgreSQL 12.9, compiled by Visual C++ build 1916, 64-bit
+2022-11-23 03:24:16.320 EST [79380] LOG:  could not bind IPv6 address "::1": Permission denied
+2022-11-23 03:24:16.320 EST [79380] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2022-11-23 03:24:16.320 EST [79380] LOG:  could not bind IPv4 address "127.0.0.1": Permission denied
+2022-11-23 03:24:16.320 EST [79380] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2022-11-23 03:24:16.320 EST [79380] WARNING:  could not create listen socket for "localhost"
+2022-11-23 03:24:16.320 EST [79380] FATAL:  could not create any TCP/IP sockets
+2022-11-23 03:24:16.320 EST [79380] LOG:  database system is shut down
+2022-11-23 03:24:28.812 EST [121440] LOG:  starting PostgreSQL 12.9, compiled by Visual C++ build 1916, 64-bit
+2022-11-23 03:24:28.814 EST [121440] LOG:  could not bind IPv6 address "::1": Permission denied
+2022-11-23 03:24:28.814 EST [121440] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2022-11-23 03:24:28.814 EST [121440] LOG:  could not bind IPv4 address "127.0.0.1": Permission denied
+2022-11-23 03:24:28.814 EST [121440] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2022-11-23 03:24:28.814 EST [121440] WARNING:  could not create listen socket for "localhost"
+2022-11-23 03:24:28.814 EST [121440] FATAL:  could not create any TCP/IP sockets
+2022-11-23 03:24:28.814 EST [121440] LOG:  database system is shut down

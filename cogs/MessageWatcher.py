@@ -4,9 +4,9 @@ import random
 import discord
 from discord.ext import commands, tasks
 
-import cogs.helper as helper
-from cogs.ChatAI import ChatAI
-from cogs.helper import activesettings
+import data.helper as helper
+from data.ChatAI import ChatAI
+from data.helper import activesettings
 
 activesettings()
 count = 0
@@ -29,7 +29,7 @@ class MessageWatcher(commands.Cog):
         processed_input = ''
         self.settingsfile = helper.settingsfile
         activesettings()
-        self.debug = int(helper.debug)
+        self.debug = helper.debug
         self.prefix = helper.prefix
         self.botid = helper.botid
         self.response_chance = helper.responsechance

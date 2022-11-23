@@ -4,8 +4,8 @@ import distutils.util
 import os
 import random
 import re
-import cogs.helper as helper
-from cogs.helper import activesettings
+import data.helper as helper
+from data.helper import activesettings
 from aitextgen import aitextgen
 
 global settingsfile, debug
@@ -21,7 +21,7 @@ class ChatAI:
         togpu = bool(distutils.util.strtobool(helper.togpu))
         self.model_folder = helper.modelfolder
         self.maxlines = int(helper.maxlines)
-        self.debug = int(helper.debug)
+        self.debug = helper.debug
         self.togpu = togpu
         self.prefix = str(helper.prefix)
         loop = asyncio.get_event_loop()
@@ -248,9 +248,3 @@ class ChatAI:
         print("============================+RESPONSE+===========================")
         print(formatted)
         return formatted
-    
-
-
-async def setup(client):
-    await client.add_cog(ChatAI(client))
-#

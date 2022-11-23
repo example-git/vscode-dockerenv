@@ -1,7 +1,6 @@
 import configparser
 from pathlib import Path
-
-global token, prefix, botid, channelid, ownerid, responsechance, debug, settingsfile, cachename, maxlines, togpu, modelfolder, activesettingsvar, custommsg
+global token, prefix, botid, channelid, ownerid, responsechance, debug, settingsfile, cachename, maxlines, togpu, modelfolder, activesettingsvar, custommsg, configname, togpubool, debugbool
 
 config = configparser.ConfigParser()
 
@@ -16,11 +15,12 @@ def opensettings(settingsfile="config.ini"):
     tokenlib = dict(config.items('token'))
     settingslib = dict(config.items('settings'))
     ailib = dict(config.items('aiSettings'))
+    boollib = dict(config.items('boolvalues'))
     togpu = config.getboolean('aiSettings', 'togpu')
     globals().update(tokenlib)
     globals().update(settingslib)
     globals().update(ailib)
-    togpu = config.getboolean('aiSettings', 'togpu')
+    globals().update(boollib)
     settingsfile = config.get('settings', 'settingsfile')
 
 
@@ -29,32 +29,41 @@ def activesettings():
     tokenlib = dict(config.items('token'))
     settingslib = dict(config.items('settings'))
     ailib = dict(config.items('aiSettings'))
+    boollib = dict(config.items('boolvalues'))
     globals().update(tokenlib)
     globals().update(settingslib)
     globals().update(ailib)
+    globals().update(boollib)
 
 
 def showsettings():
+    togpubool = config.getboolean('aiSettings', 'togpu')
+    debugbool = config.getboolean('settings', 'debug')
     print("=================================================================")
     print("The Following settings have been loaded:")
     print(" ")
-    print("[settings]")
+    print("--------------")
+    print("Bot Settings:")
+    print("--------------")
     print(f"prefix : {prefix}")
     print(f"botid : {botid}")
     print(f"channelid : {channelid}")
     print(f"responseChance : {responsechance}")
-    print(f"debug : {debug}")
+    print(f"debug : {debugbool}")
     print(f"settingsfile : {settingsfile}")
     print(" ")
-    print("[aiSettings]")
+    print("--------------")
+    print("AI Settings:")
+    print("--------------")
     print(f"cachename : {cachename}")
     print(f"maxlines : {maxlines}")
-    print(f"togpu : {togpu}")
+    print(f"togpu : {togpubool}")
     print(f"modelfolder : {modelfolder}")
+    print(" ")
     print("=================================================================")
 
 
-def savesettings(settingsfile="config.ini", modelfolder="trained_model", togpu="0"):
+def savesettings(settingsfile="config.ini", cachename=None, modelfolder=None, togpu=None, debug=None, token=None):
     filecheck = Path(f"./{settingsfile}")
     if not filecheck.exists():
         try:
@@ -66,7 +75,19 @@ def savesettings(settingsfile="config.ini", modelfolder="trained_model", togpu="
             return
     config.read(settingsfile)
     config.set('settings', 'settingsfile', f'{settingsfile}')
-    config.set('aiSettings', 'modelfolder', f'{modelfolder}')
-    config.set('aiSettings', 'togpu', togpu)
+    if cachename:
+        config.set('aiSettings', 'cachename', f'{cachename}')
+    if modelfolder:
+        config.set('aiSettings', 'modelfolder', f'{modelfolder}')
+    if togpu:
+        config.set('aiSettings', 'togpu', togpu)
+        togpubool = config.getboolean('aiSettings', 'togpu')
+        config.set('boolvalues', 'togpubool', f'{togpubool}')
+    if debug:
+        config.set('settings', 'debug', debug)
+        debugbool = config.getboolean('settings', 'debug')
+        config.set('boolvalues', 'debugbool', f'{debugbool}')
+    if token:
+        config.set('token', 'token', token)
     with open(settingsfile, 'w') as settingsfile:
         config.write(settingsfile)
