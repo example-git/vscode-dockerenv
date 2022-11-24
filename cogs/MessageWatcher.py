@@ -158,8 +158,8 @@ async def messagetest(self, ctx, publictest=False):
         context += msg.content + "\r\n"
     processed_input = await process_input(context, helper.botid)
     response = ai.get_bot_response(receivedmessage=processed_input)
-    testmessage1 = str('```CSS\r GPT2 generation test: {:%m-%d %H:%M:%S}\r'.format(datetime.datetime.now()))
-    testmessage2 = str(f' GUILD: "{guildname}" | CHANNEL:  "#{channelname}"\r```')
+    testmessage1 = str('```CSS\rGPT2 generation test: {:%m-%d %H:%M:%S}\r'.format(datetime.datetime.now()))
+    testmessage2 = str(f'GUILD:   "{guildname}"\rCHANNEL: "#{channelname}"\r```')
     testmessage3 = str(f'```diff\r- Context\r{context[:750]}\r')
     testmessage4 = str(f'- Response\r{response[:750]}\r```')
     report1 = [testmessage1, testmessage2] 
