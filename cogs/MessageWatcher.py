@@ -25,7 +25,7 @@ class MessageWatcher(commands.Cog):
         self.prefix = helper.prefix
         self.botid = helper.botid
         self.response_chance = helper.responsechance
-        self.togpu = helper.togpu
+        self.togpu = helper.togpubool
         self.maxlines = helper.maxlines
         self.channelid = helper.channelid
         self.chat_ai = gpt2

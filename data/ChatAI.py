@@ -14,8 +14,8 @@ global settingsfile, debug
 
 
 activesettings()
-
-gpt2 = aitextgen(model_folder=helper.modelfolder, to_gpu=helper.togpu)
+togpu = bool(distutils.util.strtobool(helper.togpu))
+gpt2 = aitextgen(model_folder=helper.modelfolder, to_gpu=togpu)
     
     
 def generate(self, numtokens, receivedmessage):
@@ -78,7 +78,6 @@ class ChatAI:
             print(oldmsg, flush=True)
             print("===========================OLDMSG-LOG============================", flush=True)
         numtokens = len(gpt2.tokenizer(receivedmessage)["input_ids"])
-        print(numtokens)
         if self.debug == 1:
             print(" ", flush=True)
             print("Num Tokens: ", flush=True)
@@ -94,7 +93,6 @@ class ChatAI:
 
     def get_bot_custom(self, receivedmessage):
         """ Get a processed response to a given message using GPT model """
-        print(receivedmessage, flush=True)
         self.custommsg = True
         old_msgs = ""
         old_msgs = receivedmessage.split('\r\n')
@@ -245,6 +243,6 @@ class ChatAI:
             print("==========================Final and Last=========================", flush=True)
         
         print(" ", flush=True)
-        print("============================+RESPONSE+===========================")
-        print(formatted)
+        print("============================+RESPONSE+===========================", flush=True)
+        print(formatted, flush=True)
         return formatted

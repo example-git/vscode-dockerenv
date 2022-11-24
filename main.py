@@ -94,14 +94,13 @@ def main(cache_name=None):
 # outputfile.write(line)
 
     elif args.train:
-        from aitextgen import \
-            aitextgen  # lazily import aitextgen. idk if this matters, but i thought it might speed up start times for when you're not training the AI as opposed to having this at the top
-        ai = aitextgen(tf_gpt2="355M", to_gpu=helper.togpu)
+        from aitextgen import aitextgen
+        
+        ai = aitextgen(tf_gpt2="355M", to_gpu=helper.togpubool)
         ai.train(helper.cachename,
                  line_by_line=False,
                  from_cache=True,
                  # num_steps=30000,
-                 # Takes less than an hour on my RTX 3060. Increase if you want, but remember that training can pick up where it left off after this finishes.
                  generate_every=500,
                  save_every=1000,
                  learning_rate=1e-4,
@@ -113,32 +112,8 @@ def main(cache_name=None):
     else:
         asyncio.run(mainbot())
         print("Launch with either --test --train --encode --clean or set a token in main.py")
-
-
-# def mainbot():
-# intents = discord.Intents.all()
-# client = commands.Bot(command_prefix=prefix, intents=intents)
-
-# @client.event
-# async def on_ready():
-# print('logged in')
-# print('bot name : ' + client.user.name)
-# print(f'bot ID : {client.user.id}')
-# print('discord version : ' + discord.__version__)
-# global chat_ai
-# chat_ai = ChatAI(maxlines, togpu)
-
-# client.load_extension("data.examplewatcher")
-
-# client.run(f"{discordtoken}")
-
-
-# class BotService(commands.Cog):
-# async def setup_hook(self) -> None:
-#     await self.load_extension('data.examplewatcher')
-
-# This would also be a good place to connect to our database and
-# load anything that should be in memory prior to handling events.
+        
+        
 class DiscordClient(commands.Bot):
     
     global status, activitylabel, loglevelvar
