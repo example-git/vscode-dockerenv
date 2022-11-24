@@ -1,3 +1,5 @@
+import nest_asyncio
+nest_asyncio.apply()
 import asyncio
 import distutils
 import distutils.util
@@ -5,59 +7,56 @@ import os
 import random
 import re
 import data.helper as helper
-from data.helper import activesettings
 from aitextgen import aitextgen
+from data.helper import activesettings
 
 global settingsfile, debug
 
 
 activesettings()
 
+gpt2 = aitextgen(model_folder=helper.modelfolder, to_gpu=helper.togpu)
+    
+    
+def generate(self, numtokens, receivedmessage):
+    output = gpt2.generate(
+        max_length=numtokens + 100,
+        prompt=receivedmessage + "\r\n",
+        do_sample=True,
+        top_p=0.85,
+        top_k=0,
+        repetition_penalty=1.1,
+        return_as_list=True
+    )
+    return output
+
+
+def generatecustom(self, numtokens, receivedmessage):
+    output = gpt2.generate(
+        max_length=numtokens + 100,
+        prompt=receivedmessage + "\r\n",
+        do_sample=True,
+        top_p=0.85,
+        top_k=0,
+        repetition_penalty=1.1,
+        return_as_list=True
+    )
+    return output
+
 
 class ChatAI:
-
     def __init__(self, processed_input=None) -> None:
         activesettings()
         togpu = bool(distutils.util.strtobool(helper.togpu))
         self.model_folder = helper.modelfolder
         self.maxlines = int(helper.maxlines)
-        self.debug = helper.debug
+        self.debug = int(helper.debug)
         self.togpu = togpu
         self.prefix = str(helper.prefix)
-        loop = asyncio.get_event_loop()
-        self.loop = loop
+        self.gpt2 = gpt2
         if not os.path.isdir(f"{self.model_folder}"):
             raise Exception(
                 f"You need to train the model first. Do this in colab or locally and make sure the finished model is in a folder called \"{modelfolder}\".")
-        self.gpt2 = aitextgen(model_folder=self.model_folder, to_gpu=self.togpu)
-
-    def generate(self, numtokens=int, receivedmessage=str):
-        output = self.gpt2.generate(
-            max_length=numtokens + 100,
-            prompt=receivedmessage + "\r\n",
-            do_sample=True,
-            top_p=0.85,
-            top_k=0,
-            repetition_penalty=1.1,
-            return_as_list=True
-        )
-        return output
-
-    def generatecustom(self, numtokens=int, receivedmessage=str):
-        output = self.gpt2.generate(
-            max_length=numtokens + 100,
-            prompt=receivedmessage + "\r\n",
-            do_sample=True,
-            top_p=0.85,
-            top_k=0,
-            repetition_penalty=1.1,
-            return_as_list=True
-        )
-        return output
-
-    async def workload(self, numtokens, receivedmessage):
-        gentaskresult = await asyncio.run(ChatAI.generate(numtokens, receivedmessage))
-        return gentaskresult
 
     def get_bot_response(self, receivedmessage):
         """ Get a processed response to a given message using GPT model """
@@ -78,7 +77,8 @@ class ChatAI:
             print("==============================DEBUG==============================", flush=True)
             print(oldmsg, flush=True)
             print("===========================OLDMSG-LOG============================", flush=True)
-        numtokens = len(self.gpt2.tokenizer(receivedmessage)["input_ids"])
+        numtokens = len(gpt2.tokenizer(receivedmessage)["input_ids"])
+        print(numtokens)
         if self.debug == 1:
             print(" ", flush=True)
             print("Num Tokens: ", flush=True)
@@ -88,12 +88,13 @@ class ChatAI:
             while numtokens >= 1000:
                 receivedmessage = ' '.join(receivedmessage.split(' ')[20:])  # pretty arbitrary
                 numtokens = len(self.gpt2.tokenizer(receivedmessage)["input_ids"])
-        generateout = self.generate(numtokens, receivedmessage)
+        generateout = generate(self, numtokens=numtokens, receivedmessage=receivedmessage)
         formatted = self.formatmessage(outputtext=generateout)
         return formatted
 
     def get_bot_custom(self, receivedmessage):
         """ Get a processed response to a given message using GPT model """
+        print(receivedmessage, flush=True)
         self.custommsg = True
         old_msgs = ""
         old_msgs = receivedmessage.split('\r\n')
@@ -108,8 +109,6 @@ class ChatAI:
         for c in cleaned:
             c = c.replace('? ', '. ')
             c = c.replace('! ', '. ')
-            #c = c.replace('?', '. ')
-            #c = c.replace('!', '. ')
             cleaned2 += str(c)
         cleaned3 = ""
         cleaned3 = cleaned2.split('. ')
@@ -132,6 +131,7 @@ class ChatAI:
             print(oldmsg, flush=True)
             print("===========================OLDMSG-LOG============================", flush=True)
         numtokens = len(self.gpt2.tokenizer(cleanedtxt)["input_ids"])
+        print(numtokens)
         if self.debug == 1:
             print(" ", flush=True)
             print("Num Tokens: ", flush=True)
@@ -141,7 +141,7 @@ class ChatAI:
             while numtokens >= 1000:
                 cleaned = ' '.join(cleanedtxt.split(' ')[20:])  # pretty arbitrary
                 numtokens = len(self.gpt2.tokenizer(cleanedtxt)["input_ids"])
-        generateout = self.generatecustom(numtokens, cleanedtxt)
+        generateout = generatecustom(self, numtokens=numtokens, receivedmessage=cleanedtxt)
         formatted = self.formatmessage(outputtext=generateout)
         return formatted
 
@@ -229,8 +229,8 @@ class ChatAI:
             done.append(str(msg))
 
         if 0 < len(link) <= 1:
-            for l in link:
-                done.append(str(l))
+            for saved in link:
+                done.append(str(saved))
         else:
             done = final
 

@@ -1,6 +1,9 @@
 import configparser
 from pathlib import Path
-global token, prefix, botid, channelid, ownerid, responsechance, debug, settingsfile, cachename, maxlines, togpu, modelfolder, activesettingsvar, custommsg, configname, togpubool, debugbool
+
+global token, prefix, botid, channelid, ownerid, responsechance, debug, settingsfile, cachename, maxlines
+global togpu, modelfolder, activesettingsvar, custommsg, configname, togpubool, debugbool, activitytype
+global activitytext, activitystatus, discstatus, activitylabel, loglevelvar, customauthorid
 
 config = configparser.ConfigParser()
 
@@ -51,6 +54,7 @@ def showsettings():
     print(f"responseChance : {responsechance}")
     print(f"debug : {debugbool}")
     print(f"settingsfile : {settingsfile}")
+    print(f"activity : {activitystatus} | {activitytype} {activitytext}")
     print(" ")
     print("--------------")
     print("AI Settings:")

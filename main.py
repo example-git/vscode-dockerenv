@@ -1,22 +1,22 @@
 # !/usr/bin/env python3
+import nest_asyncio
+nest_asyncio.apply()
 import argparse
 import asyncio
-import asyncpg
 import logging
 import logging.handlers
-import os
+from typing import List
+import asyncpg
 import discord
-from aitextgen.TokenDataset import TokenDataset
-from discord.ext import commands
-import data.helper as helper
-from data.helper import activesettings
-from data.helper import opensettings
-from data.helper import savesettings
-from data.helper import showsettings
 from aiohttp import ClientSession
-from typing import List, Generator
+from aitextgen.TokenDataset import TokenDataset
+from discord.ext import commands, tasks
+import data.helper as helper
+from data.helper import (activesettings, opensettings, savesettings, showsettings)
 
-global settingsfile, modelfolder, configname
+global settingsfile, modelfolder, configname, intents
+
+intents = discord.Intents.all()
 
 
 def main(cache_name=None):
@@ -35,26 +35,16 @@ def main(cache_name=None):
     common = parser.add_argument_group('Common Settings', 'Settings that will need to be set everytime if not default')
     aioptions = parser.add_argument_group('AI Options', 'AI Related settings')
     standard = parser.add_argument_group('Standard Options', 'True/False can be set with [true/false, t/f, 1/0, yes/no, y/n] | Non-AI Related settings, will save to specified config after being set once')
-    aioptions.add_argument("--test", dest="test", action="store_true",
-                        help="Test the currently trained AI model through the terminal prompt without launching the entire bot.")
-    aioptions.add_argument("--train", dest="train", action="store_true",
-                        help="Trains the model on a file named dataset_cache.tar.gz")
-    aioptions.add_argument("--data", dest="cachename", default="dataset_cache.tar.gz",
-                        help="set a non default datafile to train on. Default: dataset_cache.tar.gz")
-    aioptions.add_argument("--encode", dest="encode", action="store_true",
-                        help="encodes dataset.txt into a compressed archive.")
-    aioptions.add_argument("--clean", dest="clean", action="store_true",
-                        help="clean a rawtext.txt file discord chatlog into something with less junk data | Outputs as dataset.txt")
-    aioptions.add_argument("--model", dest="modelfolder", default="trained_model",
-                        help="Specify a custom folder to use a training model from. Default: trained_model (for ./trained_model)")
-    common.add_argument("--config", dest="configfile", default="config",
-                        help="Specifies a custom config file | Follow with a config file name (ex.--config main for main.ini)")
-    standard.add_argument("--token", dest="token", action="store",
-                        help="Follow with a token (--token TOKEN) to set the token for this config (Only needs to be set once, this value will save in the config afterwards)")  
-    standard.add_argument("--togpu", type=str_to_bool, nargs='?', const=True, choices={True: dict(truedict), False: dict(falsedict)},
-                        help="Specifies whether or not this config uses a Cuda GPU (Only needs to be set once, this value will save in the config afterwards)")
-    standard.add_argument("--debug", type=str_to_bool, nargs='?', const=True, choices={True: dict(truedict), False: dict(falsedict)},
-                        help="Specifies whether or not this config outputs debug logs (Only needs to be set once, this value will save in the config afterwards)")
+    aioptions.add_argument("--test", dest="test", action="store_true", help="Test the currently trained AI model through the terminal prompt without launching the entire bot.")
+    aioptions.add_argument("--train", dest="train", action="store_true", help="Trains the model on a file named dataset_cache.tar.gz")
+    aioptions.add_argument("--data", dest="cachename", default="dataset_cache.tar.gz", help="set a non default datafile to train on. Default: dataset_cache.tar.gz")
+    aioptions.add_argument("--encode", dest="encode", action="store_true", help="encodes dataset.txt into a compressed archive.")
+    aioptions.add_argument("--clean", dest="clean", action="store_true", help="clean a rawtext.txt file discord chatlog into something with less junk data | Outputs as dataset.txt")
+    aioptions.add_argument("--model", dest="modelfolder", default="trained_model", help="Specify a custom folder to use a training model from. Default: trained_model (for ./trained_model)")
+    common.add_argument("--config", dest="configfile", default="config", help="Specifies a custom config file | Follow with a config file name (ex.--config main for main.ini)")
+    standard.add_argument("--token", dest="token", action="store", help="Follow with a token (--token TOKEN) to set the token for this config (Only needs to be set once, this value will save in the config afterwards)")  
+    standard.add_argument("--togpu", type=str_to_bool, nargs='?', const=True, choices={True: dict(truedict), False: dict(falsedict)}, help="Specifies whether or not this config uses a Cuda GPU (Only needs to be set once, this value will save in the config afterwards)")
+    standard.add_argument("--debug", type=str_to_bool, nargs='?', const=True, choices={True: dict(truedict), False: dict(falsedict)}, help="Specifies whether or not this config outputs debug logs (Only needs to be set once, this value will save in the config afterwards)")
     parser.print_help()
     try:
         args = parser.parse_args()
@@ -69,13 +59,13 @@ def main(cache_name=None):
     opensettings(settingsfile=settingsfile)
     if args.token:
         savesettings(settingsfile, token=str(args.token))
-    if args.togpu == True:
+    if args.togpu is True:
         savesettings(settingsfile, togpu="1")
-    if args.togpu == False:
+    if args.togpu is False:
         savesettings(settingsfile, togpu="0")
-    if args.debug == True:
+    if args.debug is True:
         savesettings(settingsfile, debug="1")
-    if args.debug == False:
+    if args.debug is False:
         savesettings(settingsfile, debug="0")
     if args.modelfolder != helper.modelfolder:
         savesettings(settingsfile, modelfolder=args.modelfolder)
@@ -84,6 +74,7 @@ def main(cache_name=None):
     opensettings(settingsfile)
     helper.token = helper.token
     helper.activesettingsvar = settingsfile
+    global prefix
 
     if args.test:
         asyncio.run(DiscordClient.testrun())
@@ -98,12 +89,13 @@ def main(cache_name=None):
             if not line.startswith(("[", "\n", "{", "=====", "Guild:", "Channel:", "Topic:", "{Attachments}",
                                     "https://images-ext-1.discordapp.net/external/", "e!", "{Reactions}",)):
                 outputfile.write(line)
-        # for line in inputfile.readlines():
-        # if not line.contains(( "{Attachments}", "https://images-ext-1.discordapp.net/external/", )):
-        # outputfile.write(line)
+# for line in inputfile.readlines():
+# if not line.contains(( "{Attachments}", "https://images-ext-1.discordapp.net/external/", )):
+# outputfile.write(line)
 
     elif args.train:
-        from aitextgen import aitextgen  # lazily import aitextgen. idk if this matters, but i thought it might speed up start times for when you're not training the AI as opposed to having this at the top
+        from aitextgen import \
+            aitextgen  # lazily import aitextgen. idk if this matters, but i thought it might speed up start times for when you're not training the AI as opposed to having this at the top
         ai = aitextgen(tf_gpt2="355M", to_gpu=helper.togpu)
         ai.train(helper.cachename,
                  line_by_line=False,
@@ -147,8 +139,10 @@ def main(cache_name=None):
 
 # This would also be a good place to connect to our database and
 # load anything that should be in memory prior to handling events.
-
 class DiscordClient(commands.Bot):
+    
+    global status, activitylabel, loglevelvar
+   
     def __init__(
         self,
         *args,
@@ -157,6 +151,7 @@ class DiscordClient(commands.Bot):
         web_client: ClientSession,
         **kwargs,
     ):
+        self.settingsfile = helper.settingsfile
         super().__init__(*args, **kwargs)
         activesettings()
         self.db_pool = db_pool
@@ -169,7 +164,7 @@ class DiscordClient(commands.Bot):
 
     async def testrun():
         from data.ChatAI import ChatAI
-        ai = ChatAI(int(helper.togpu))  # see comment on line 33
+        ai = ChatAI()  # see comment on line 33
         print("Type \"exit!!\" to exit.")
         while True:
             inp = input("> ")
@@ -177,14 +172,35 @@ class DiscordClient(commands.Bot):
                 return
             ai.get_bot_response(receivedmessage=inp)
             print("============================+RESPONSE+===========================")
+            
+    def getactivity():        
+        #status conversion stuff
+        if helper.activitystatus == 'dnd':
+            helper.discstatus = discord.Status.dnd
+        if helper.activitystatus == 'online':
+            helper.discstatus = discord.Status.online
+        if helper.activitystatus == 'idle':
+            helper.discstatus = discord.Status.idle
+        if helper.activitystatus == 'invisible':
+            helper.discstatus = discord.Status.invisible
+        if helper.activitytype == 'playing':
+            helper.activitylabel = discord.ActivityType.playing
+        if helper.activitytype == 'streaming':
+            helper.activitylabel = discord.ActivityType.streaming
+        if helper.activitytype == 'listening':
+            helper.activitylabel = discord.ActivityType.listening
+        if helper.activitytype == 'watching':
+            helper.activitylabel = discord.ActivityType.watching
 
 
 async def mainbot() -> object:
+    #logger (requires postgresql)
+    if helper.debugbool:
+        loglevelvar = logging.INFO
+    if not helper.debugbool:
+        loglevelvar = logging.INFO
     logger = logging.getLogger('discord')
-    if helper.debug == 1:
-        logger.setLevel(logging.DEBUG)
-    if helper.debug == 0:
-        logger.setLevel(logging.INFO)
+    logger.setLevel(loglevelvar)
     handler = logging.handlers.RotatingFileHandler(
         filename=str(f'botlog_{helper.configname}.log'),
         encoding='utf-8',
@@ -195,21 +211,24 @@ async def mainbot() -> object:
     formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-    #discord.utils.setup_logging(handler=handler, root=False)
-    async with ClientSession() as our_client, asyncpg.create_pool(user='postgres', command_timeout=30) as pool:
-        exts = ['MessageWatcher']
-        async with DiscordClient(command_prefix=helper.prefix, db_pool=pool, web_client=our_client, initial_extensions=exts, intents=discord.Intents.all()) as client:
-            @client.event
+    
+    async with ClientSession() as our_client, asyncpg.create_pool(user='postgres', host='localhost', command_timeout=30) as pool:
+        global status, activitylabel
+        import data.ChatAI
+        exts = ['MessageWatcher'] 
+        async with DiscordClient(command_prefix=helper.prefix, db_pool=pool, web_client=our_client, initial_extensions=exts, intents=intents) as bot:
+            @bot.event
             async def on_ready():
+                activesettings()
+                DiscordClient.getactivity()
+                activity = discord.Activity(type=helper.activitylabel, name=str(helper.activitytext))
+                await bot.change_presence(status=helper.discstatus, activity=activity)
                 showsettings()
-                print('logged in')
-                print('bot name : ' + client.user.name)
-                print(f'bot ID : {client.user.id}')
+                print('bot name : ' + bot.user.name)
+                print(f'bot ID : {bot.user.id}')
                 print('discord version : ' + discord.__version__)
-                print("=================================================================")
-            await client.start(f"{helper.token}")
-
-
+                print("=================================================================")         
+            await bot.start(f"{helper.token}")
 
 if __name__ == "__main__":
     main()
