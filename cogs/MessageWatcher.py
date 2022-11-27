@@ -15,7 +15,7 @@ global processed_input
 class MessageWatcher(commands.Cog):
     def __init__(self, bot):
         nest_asyncio.apply()
-        notsam = 0
+        notowner = 0
         customstr = 0
         has_mentioned = 0
         response_chance = 0
@@ -31,55 +31,49 @@ class MessageWatcher(commands.Cog):
         self.chat_ai = gpt2
         self.ownerid = int(helper.ownerid)
         self.channelid = helper.channelid
-        self.notsam = 'test'
+        self.notowner = 'test'
         self.bot = bot
         self.customstr = customstr
-        self.notsam = notsam
+        self.notowner = notowner
         self.has_mentioned = has_mentioned
         self.response_chance = helper.responsechance
-        self.messagetest = False
 
         @commands.command()
         async def gen(ctx=Context, *, sentence: str = None):
             ctxmessage = ctx.message
+            self.ctxmessage = ctxmessage
             self.ctxmessagechannel = ctxmessage.channel
-            self.messagetest = False
+            self.has_mentioned = True
             if ctxmessage.author == self.bot.user:
                 return
             if int(ctxmessage.author.id) != int(helper.ownerid):
-                self.notsam = True
+                self.notowner = True
             else:
-                self.notsam = False
+                self.notowner = False
             if sentence is not None:
                 self.customstr = str(sentence)
-                if self.notsam:
+                if self.notowner:
                     if int(ctxmessage.channel.id) != int(helper.channelid):
                         return
                     else:
-                        self.has_mentioned = True
                         customauthorid = int(ctxmessage.author.id)
                         helper.customauthorid = customauthorid
                         asyncio.run(messagecustom(self, ctx=ctxmessage))
                         return
-                else:
-                    self.has_mentioned = True
+                else:                
                     customauthorid = int(ctxmessage.author.id)
                     helper.customauthorid = customauthorid
                     asyncio.run(messagecustom(self, ctx=ctxmessage))
                     return
             else:
-                if self.notsam:
+                if self.notowner:
                     if int(ctxmessage.channel.id) != int(helper.channelid):
-                        return
-                        # else:
-                        #     asyncio.run(messagegen(ctx=ctxmessage))
                         return
                 else:
                     try:
                         await ctxmessage.delete()
                     except:
-                        print(
-                            "No permissions to delete the sam's message", flush=True)
+                        print("No permissions to delete the sam's message", flush=True)
                     asyncio.run(messagegen(self, ctx=ctxmessage))
                     return
         self.bot.add_command(gen)
@@ -87,6 +81,12 @@ class MessageWatcher(commands.Cog):
         @commands.command()
         @commands.is_owner()
         async def gentest(ctx=Context, *, number: int = 0):
+            print(helper.channelid)
+            print(ctx.channel.id)
+            print(ctx.author)
+            print(self.has_mentioned)
+            print(self.bot.user.name)
+            print(self.bot.user.discriminator)
             ctxmessage = ctx.message
             if number == 1:
                 publictest = True
@@ -99,28 +99,54 @@ class MessageWatcher(commands.Cog):
             except:
                 print("failed to delete message")
         self.bot.add_command(gentest)
+        
 
     @commands.Cog.listener()
     async def on_message(self, ctx: Context) -> None:
+        Owner = None
         global settingsfile
-        ctxmessage = ctx
-        self.ctxmessagechannel = ctx.channel
-        if int(ctx.channel.id) != int(helper.channelid):
-            return
-        if ctx.author == self.bot.user:
-            # Skip any messages sent by ourselves so that we don't get stuck in any loops
-            return
-        # Check to see if bot has been mentioned
         self.has_mentioned = False
+        if ctx.author == self.bot.user:
+            return
+        authorid = ctx.author.id
+        ownerid = helper.ownerid
+        ctxmessage = ctx
+        if helper.listenerdebug == 1:
+            print("==========================Bot Triggered at {0:%Y-%m-%d %H:%M:%S}+=========================".format(datetime.datetime.now()), flush=True)
+            print(f'MESSAGE AUTHOR: {ctxmessage.author}')
+            print(f'MESSAGE CHANNEL: {self.ctxmessagechannel}')
+            print(f'{self.response_chance} | {random.random()}')
+            if int(ctx.channel.id) != int(helper.channelid):
+                print(
+                    f'CHANNEL ID:{ctx.channel.id} | BLOCKED CHANNEL: {helper.channelid}')
+            else:
+                print('CHANNEL ID: PASSED')
+            print(f'Mentioned: {self.has_mentioned}')
+            print()
         for mention in ctx.mentions:
             if str(mention) == self.bot.user.name + "#" + self.bot.user.discriminator:
                 self.has_mentioned = True
                 break
+        
+        if int(authorid) == int(ownerid):
+            Owner = True
+        self.ctxmessagechannel = ctxmessage.channel
+        if Owner and self.has_mentioned:
+            asyncio.run(messagegen(self, ctx=ctxmessage))
+        else:
+            if int(ctxmessage.channel.id) != int(helper.channelid):
+                return
+            elif float(random.random()) > float(self.response_chance) and self.has_mentioned is False:
+                return
+            else:
+                asyncio.run(messagegen(self, ctx=ctxmessage))
+                return
+        # Check to see if bot has been mentioned
         # Only respond randomly (or when mentioned), not to every message
-        if random.random() > float(self.response_chance) and self.has_mentioned is False:
-            return
-        #    ctx = await self.get_context(message)
-        asyncio.run(messagegen(self, ctx=ctxmessage))
+
+  
+
+        
 
 
 @tasks.loop(count=1)
@@ -223,10 +249,7 @@ async def messagecustom(self, ctx):
     print("==========================Bot Triggered at {0:%Y-%m-%d %H:%M:%S}+=========================".format(
         datetime.datetime.now()), flush=True)
     print(" ", flush=True)
-    # Process input and generate output
-    if self.messagetest:
-        user = self.bot.get_user(self.ownerid)
-        await user.send("============================+Context+===========================\r\n" + context + "\r\n============================+Context+===========================")
+    # Process input and generate output@
     processed_input = context
     response = await clientcustom(self, processed_input)
     postprocess.start(self, response=response, ctx=ctxstore)
@@ -235,19 +258,13 @@ async def messagecustom(self, ctx):
 @tasks.loop(count=1)
 async def postprocess(self, response: str, ctx):
     final = response[:2000]
-    if self.messagetest:
-        user = self.bot.get_user(self.ownerid)
-        await user.send("============================+Response+===========================\r\n" + final + "\r\n============================+Response+===========================")
-        self.messagetest = False
-        return
     if self.has_mentioned:
         try:
             await ctx.reply(final)  # sends the response
             self.has_mentioned = False
             return
         except:
-            print("failed to reply, sending message normally to user " +
-                  str(ctx.author.id), flush=True)
+            print("failed to reply, sending message normally to user ")
             await self.ctxmessagechannel.send(final)  # sends the response
             self.has_mentioned = False
             return
@@ -258,7 +275,6 @@ async def postprocess(self, response: str, ctx):
 
 async def process_input(message: str, botid=None) -> str:
     processed_input = message
-    # Remove bot's @s from input
     return processed_input.replace(("<@!" + str(botid) + ">"), "")
 
 

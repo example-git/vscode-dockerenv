@@ -3,7 +3,7 @@ from pathlib import Path
 
 global token, prefix, botid, channelid, ownerid, responsechance, debug, settingsfile, cachename, maxlines
 global togpu, modelfolder, activesettingsvar, custommsg, configname, togpubool, debugbool, activitytype
-global activitytext, activitystatus, discstatus, activitylabel, loglevelvar, customauthorid
+global activitytext, activitystatus, discstatus, activitylabel, loglevelvar, customauthorid, listenerdebug
 
 config = configparser.ConfigParser()
 
@@ -67,7 +67,7 @@ def showsettings():
     print("=================================================================")
 
 
-def savesettings(settingsfile="config.ini", cachename=None, modelfolder=None, togpu=None, debug=None, token=None):
+def savesettings(settingsfile="config.ini", cachename=None, modelfolder=None, togpu=None, debug=None, token=None, listenerdebug=None):
     filecheck = Path(f"./{settingsfile}")
     if not filecheck.exists():
         try:
@@ -91,6 +91,8 @@ def savesettings(settingsfile="config.ini", cachename=None, modelfolder=None, to
         config.set('settings', 'debug', debug)
         debugbool = config.getboolean('settings', 'debug')
         config.set('boolvalues', 'debugbool', f'{debugbool}')
+    if listenerdebug:
+        config.set('settings', 'listenerdebug', listenerdebug)
     if token:
         config.set('token', 'token', token)
     with open(settingsfile, 'w') as settingsfile:

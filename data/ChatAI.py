@@ -9,7 +9,7 @@ import re
 import data.helper as helper
 from aitextgen import aitextgen
 from data.helper import activesettings
-
+import data.lists as lists
 global settingsfile, debug
 
 
@@ -155,8 +155,7 @@ class ChatAI:
             self.custommsg = False
             for i in outputlist:
                 if i not in self.oldmsg:
-                    linkcheck = re.search(
-                        "(http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)", i)
+                    linkcheck = re.search(lists.link, i)
                     if linkcheck is None:
                         noclones.append(i)
             try:
@@ -166,8 +165,7 @@ class ChatAI:
         else:
             for i in outputlist:
                 if i not in self.oldmsg:
-                    linkcheck = re.search(
-                        "(http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)", i)
+                    linkcheck = re.search(lists.link, i)
                     if linkcheck is None:
                         noclones.append(i)
                     else:
@@ -189,34 +187,19 @@ class ChatAI:
             print(f"Cleaned ({len(last)}): " + str(last), flush=True)
             print("============================CLONE-LOG============================", flush=True)
 
-        replacements = {
-            '<@791687453156179999>': '<@677614885349097483>',
-            '<@175411535357673473>': '<@1001745147110899722>',
-            'nigger': 'nikker',
-            'nigga': 'nikka',
-            'kill yourself': 'krill urself',
-            '$face': '\r\nnikker detected:',
-            'niger': 'niker'
-        }
         formatted = ""
-
-        endinglist = ['! ', '. ', '???? ', '.... ', '... ', '? ', '!!!! ', '!!! ', '.. ',
-                      '???? ', '.. ', '?? ', '!! ', '!??\r\n', '!?\r\n', '!\r\n', '.\r\n', '????\r\n', '....\r\n',
-                      '...\r\n', '?\r\n']
-
-        punctuation = ['!', '.', '?', ':', '(', ')', '<', '>', '[', ']']
 
         final = []
         for i in last:
             b = random.randint(0, 20)
-            for key, value in replacements.items():
+            for key, value in lists.replacements.items():
                 i = i.replace(key, value)
-            for p in punctuation:
+            for p in lists.punctuation:
                 if i.endswith(p):
                     final.append(str(i).capitalize() + " ")
                     break
                 if p == ']':
-                    final.append((str(i).capitalize()) + endinglist[b])
+                    final.append((str(i).capitalize()) + lists.endinglist[b])
 
         done = []
 
