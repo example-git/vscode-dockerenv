@@ -5,8 +5,8 @@ badcontains = ["https://images-ext-1.discordapp.net/external/",
                 "https://media.discordapp.net/attachments/997610545798729748/",
                 "https://cdn.discordapp.com/attachments/997610545798729748/"]
 
-replace = "( \([0-9]+\):)"
-replace2 = "(\([0-9]+\):)"
+replace = r"( \([0-9]+\):)"
+replace2 = r"(\([0-9]+\):)"
 
 #lists for text generation censorship/etc
 link = "(http[s]?:\/\/(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)"
