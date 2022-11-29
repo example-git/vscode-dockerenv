@@ -54,11 +54,6 @@ RUN set -x && \
     find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
     /opt/conda/bin/conda clean -afy
 
-RUN groupadd -r conda --gid 900 \
-    && chown -R :conda /opt/conda \
-    && chmod -R g+w /opt/conda \
-    && find /opt -type d | xargs -n 1 chmod g+s
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
 gnupg2 curl ca-certificates && \
     curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub | apt-key add - && \
