@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-base-ubuntu20.04 as upstream
+FROM nvidia/cuda:11.8.0-base-ubuntu20.04
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
@@ -59,59 +59,42 @@ RUN groupadd -r conda --gid 900 \
     && chmod -R g+w /opt/conda \
     && find /opt -type d | xargs -n 1 chmod g+s
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+gnupg2 curl ca-certificates && \
+    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub | apt-key add - && \
+    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" > /etc/apt/sources.list.d/cuda.list && \
+    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" > /etc/apt/sources.list.d/nvidia-ml.list && \
+    apt-get purge --autoremove -y curl && \
+rm -rf /var/lib/apt/lists/*
 
-FROM mcr.microsoft.com/devcontainers/base:0-bullseye
-COPY --from=upstream /opt /opt/
-USER root
-
-# Copy scripts to execute
-COPY add-notice.sh /tmp/library-scripts/
-
-# Setup conda to mirror contents from https://github.com/ContinuumIO/docker-images/blob/master/anaconda3/debian/Dockerfile
-ENV LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
-    PATH=/opt/conda/bin:$PATH
-ARG USERNAME=vscode
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y --no-install-recommends \
-        bzip2 \
-        ca-certificates \
-        git \
-        libglib2.0-0 \
-        libsm6 \
-        libxcomposite1 \
-        libxcursor1 \
-        libxdamage1 \
-        libxext6 \
-        libxfixes3 \
-        libxi6 \
-        libxinerama1 \
-        libxrandr2 \
-        libxrender1 \
-        mercurial \
-        openssh-client \
-        procps \
-        subversion \
-        wget \
-    && apt-get upgrade -y \
-    && bash /tmp/library-scripts/add-notice.sh \
-    && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
-    && echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc \
-    && echo "conda activate base" >> ~/.bashrc \
-    && groupadd -r conda --gid 900 \
-    && usermod -aG conda ${USERNAME} \
-    && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts/add-notice.sh
-
-
-FROM mcr.microsoft.com/devcontainers/anaconda:0-3
 
 # Copy environment.yml (if found) to a temp location so we update the environment. Also
 # copy "noop.txt" so the COPY instruction does not fail if no environment.yml exists.
-COPY environment.yml* .docker/noop.txt /tmp/conda-tmp/
-
-RUN if [ -f "/tmp/conda-tmp/environment.yml" ]; then umask 0002 && /opt/conda/bin/conda env update -n base -f /tmp/conda-tmp/environment.yml; fi \
-    && rm -rf /tmp/conda-tmp
-
+COPY environment.yml* .docker/noop.txt /opt/conda/
 # [Optional] Uncomment this section to install additional OS packages.
 #RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     #&& apt-get -y install --no-install-recommends <your-package-list-here>
+
+ENV CUDA_VERSION 11.8.86
+ENV CUDA_PKG_VERSION 11-8=$CUDA_VERSION-1
+
+ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
+
+RUN if [ -f "/opt/conda/environment.yml" ]; then umask 0002 && /opt/conda/bin/conda env update -n base -f /opt/conda/environment.yml; fi \
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        cuda-cudart-$CUDA_PKG_VERSION \
+cuda-compat-11-8 && \
+ln -s cuda-11.8 /usr/local/cuda && \
+    rm -rf /var/lib/apt/lists/*
+
+    # Required for nvidia-docker v1
+RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
+    echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
+
+ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
+ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility     
