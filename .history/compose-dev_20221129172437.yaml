@@ -3,16 +3,11 @@ version: '3.8'
 services:
   app:
     build:
+      context: ..
       dockerfile: .docker/Dockerfile
     env_file:
-        - .en
-    resources:
-      reservations:
-        devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    
+        - .env
+
     volumes:
 
     # Overrides default command so things don't shut down after the process ends.

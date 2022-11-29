@@ -5,7 +5,8 @@ services:
     build:
       dockerfile: .docker/Dockerfile
     env_file:
-        - .en
+        - .env
+
     resources:
       reservations:
         devices:
