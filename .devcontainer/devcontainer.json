@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/anaconda-postgres
 {
 	"name": "Example.CUDA.Workspace",
-	"dockerComposeFile": "../.docker/docker-compose.yaml",
+	"dockerComposeFile": ".docker/docker-compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"runArgs": ["--gpus", "all"],
