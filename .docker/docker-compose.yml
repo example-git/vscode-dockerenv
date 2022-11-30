@@ -1,7 +1,7 @@
 version: '3.8'
-
+name: "Example Docker.Development Environment"
 services:
-  app:
+  Example-DockerDev:
     build:
       context: ..
       dockerfile: .docker/Dockerfile
@@ -20,6 +20,7 @@ services:
                 capabilities: [gpu]
     
     volumes:
+    - //o/OneDrive/Bots:/BotsProjects:bind
     - ..:/workspace:cached
 
     # Overrides default command so things don't shut down after the process ends.
