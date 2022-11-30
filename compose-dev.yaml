@@ -8,8 +8,6 @@ services:
         - .devcontainer/.env
     container_name: "Example-DockerDev"
     image: "exampleusername1/vscode-personaldev:latest"
-    depends_on:
-      - db
     deploy:        
       resources:
         reservations:
