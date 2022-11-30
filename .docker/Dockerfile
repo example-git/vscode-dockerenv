@@ -29,10 +29,11 @@ RUN set -x && \
     
     
     curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" &&\
-    bash Mambaforge-$(uname)-$(uname -m).sh -b -p /opt/conda && \
+    bash Mambaforge-$(uname)-$(uname -m).sh -b -p /opt/conda && rm -f Mambaforge-$(uname)-$(uname -m).sh &&\
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.zshrc && \
     find /opt/conda/ -follow -type f -name '*.a' -delete && \
     find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
     /opt/conda/bin/conda clean -afy
