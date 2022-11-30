@@ -2,12 +2,10 @@ version: '3.8'
 
 services:
   Example-DockerDev:
-    build:
-      dockerfile: .docker/Dockerfile
+    image: "exampleusername1/vscode-personaldev:latest"
     env_file:
         - .devcontainer/.env
     container_name: "Example-DockerDev"
-    image: "exampleusername1/vscode-personaldev:latest"
     deploy:        
       resources:
         reservations:
