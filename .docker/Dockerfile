@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-base-ubuntu20.04
+FROM nvidia/cuda:11.8.0-base-ubuntu22.04
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
@@ -76,13 +76,12 @@ ENV CUDA_PKG_VERSION 11-8=$CUDA_VERSION-1
 ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
-RUN if [ -f "/opt/conda/environment.yml" ]; then umask 0002 && /opt/conda/bin/conda env update -n base -f /opt/conda/environment.yml; fi \
+RUN if [ -f "/opt/conda/environment.yml" ]; then umask 0002 && /opt/conda/bin/conda env update -n base -f /opt/conda/environment.yml; fi
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        cuda-cudart-$CUDA_PKG_VERSION \
-cuda-compat-11-8 && \
-ln -s cuda-11.8 /usr/local/cuda && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends cuda-cudart-$CUDA_PKG_VERSION \
+        cuda-compat-11-8 && \   
+        ln -s cuda-11.8 /usr/local/cuda && \
+        rm -rf /var/lib/apt/lists/*
 
     # Required for nvidia-docker v1
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
