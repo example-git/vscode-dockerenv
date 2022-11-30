@@ -55,8 +55,6 @@ RUN set -x && \
     /opt/conda/bin/conda clean -afy
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gnupg2 curl ca-certificates && \
-    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/3bf863cc.pub | apt-key add - && \
     echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" > /etc/apt/sources.list.d/cuda.list && \
     echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" > /etc/apt/sources.list.d/nvidia-ml.list
 
@@ -78,8 +76,7 @@ RUN if [ -f "/opt/conda/environment.yml" ]; then umask 0002 && /opt/conda/bin/co
 
 RUN apt-get update && apt-get install -y --no-install-recommends cuda-cudart-$CUDA_PKG_VERSION \
         cuda-compat-11-8 && \   
-        ln -s cuda-11.8 /usr/local/cuda && \
-        rm -rf /var/lib/apt/lists/*
+        ln -s cuda-11.8 /usr/local/cuda &&
 
     # Required for nvidia-docker v1
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
