@@ -1,8 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/base:0-ubuntu-22.04 as base
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
-ENV ANACONDA_URL "https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh"  
-ENV SHA256SUM "e7ecbccbc197ebd7e1f211c59df2e37bc6959d081f2235d387e08c9026666acd"
+ENV MINIFORGE_URL="https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh"
 
 RUN set -x && \
     apt-get update --fix-missing && \
@@ -28,11 +27,8 @@ RUN set -x && \
         wget \
     && apt-get clean \
     
-    wget "${ANACONDA_URL}" -O anaconda.sh -q && \
-    echo "${SHA256SUM} anaconda.sh" > shasum && \
-    sha256sum --check --status shasum && \
-    /bin/bash anaconda.sh -b -p /opt/conda && \
-    rm anaconda.sh shasum && \
+    wget $MINIFORGE_URL && bash $(basename $MINIFORGE_URL) -b -p /opt/conda && \
+    rm $(basename $MINIFORGE_URL) shasum && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc && \
@@ -61,17 +57,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dpkg -i cuda-keyring_1.0-1_all.deb
 
 ENV CUDA_VERSION 11.8.0
-
-# For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
-
-#RUN apt-get update && apt-get install && -y --no-install-recommends \
-#    cuda-cudart-11-8=${NV_CUDA_CUDART_VERSION} \
-#    ${NV_CUDA_COMPAT_PACKAGE} \
-#    && ln -s cuda-11.8 /usr/local/cuda
-
-
-ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
-ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
     echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
