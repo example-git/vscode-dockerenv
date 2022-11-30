@@ -28,7 +28,6 @@ RUN set -x && \
     && apt-get clean \
     
     wget $MINIFORGE_URL && bash $(basename $MINIFORGE_URL) -b -p /opt/conda && \
-    rm $(basename $MINIFORGE_URL) shasum && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc && \
