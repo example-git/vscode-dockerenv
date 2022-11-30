@@ -1,9 +1,7 @@
-FROM nvidia/cuda:11.8.0-base-ubuntu20.04
-
+FROM mcr.microsoft.com/devcontainers/base:0-ubuntu-22.04 as base
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-# hadolint ignore=DL3008
 RUN set -x && \
     apt-get update --fix-missing && \
     apt-get install -y --no-install-recommends \
@@ -27,7 +25,6 @@ RUN set -x && \
         subversion \
         wget \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* && \
     UNAME_M="$(uname -m)" && \
     if [ "${UNAME_M}" = "x86_64" ]; then \
         ANACONDA_URL="https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh"; \
@@ -54,42 +51,39 @@ RUN set -x && \
     find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
     /opt/conda/bin/conda clean -afy
 
-RUN groupadd -r conda --gid 900 \
-    && chown -R :conda /opt/conda \
-    && chmod -R g+w /opt/conda \
-    && find /opt -type d | xargs -n 1 chmod g+s
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-gnupg2 curl ca-certificates && \
-    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub | apt-key add - && \
-    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" > /etc/apt/sources.list.d/cuda.list && \
-    echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/ /" > /etc/apt/sources.list.d/nvidia-ml.list && \
-    apt-get purge --autoremove -y curl && \
-rm -rf /var/lib/apt/lists/*
-
-
 # Copy environment.yml (if found) to a temp location so we update the environment. Also
 # copy "noop.txt" so the COPY instruction does not fail if no environment.yml exists.
 COPY environment.yml* .docker/noop.txt /opt/conda/
-# [Optional] Uncomment this section to install additional OS packages.
-#RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    #&& apt-get -y install --no-install-recommends <your-package-list-here>
+RUN if [ -f "/opt/conda/environment.yml" ]; then umask 0002 && /opt/conda/bin/conda env update -n base -f /opt/conda/environment.yml; fi
 
-ENV CUDA_VERSION 11.8.86
-ENV CUDA_PKG_VERSION 11-8=$CUDA_VERSION-1
+FROM base as staged
+
+ENV NVARCH x86_64
+ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-11-8
+ENV NVARCH sbsa
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.8"
+ENV NV_CUDA_CUDART_VERSION 11.8.89-1
+
+LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg2 curl ca-certificates && \
+    curl -fsSLO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/${NVARCH}/cuda-keyring_1.0-1_all.deb && \
+    dpkg -i cuda-keyring_1.0-1_all.deb
+
+ENV CUDA_VERSION 11.8.0
+
+# For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
+
+#RUN apt-get update && apt-get install && -y --no-install-recommends \
+#    cuda-cudart-11-8=${NV_CUDA_CUDART_VERSION} \
+#    ${NV_CUDA_COMPAT_PACKAGE} \
+#    && ln -s cuda-11.8 /usr/local/cuda
+
 
 ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
-RUN if [ -f "/opt/conda/environment.yml" ]; then umask 0002 && /opt/conda/bin/conda env update -n base -f /opt/conda/environment.yml; fi \
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        cuda-cudart-$CUDA_PKG_VERSION \
-cuda-compat-11-8 && \
-ln -s cuda-11.8 /usr/local/cuda && \
-    rm -rf /var/lib/apt/lists/*
-
-    # Required for nvidia-docker v1
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
     echo "/usr/local/nvidia/lib64" >> /etc/ld.so.conf.d/nvidia.conf
 
@@ -98,3 +92,5 @@ ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
 # nvidia-container-runtime
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility     
+
+
