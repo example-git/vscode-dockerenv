@@ -26,7 +26,6 @@ RUN set -x && \
         subversion \
         wget \
     && apt-get clean &&\
-    mkdir /opt/conda/ &&\
     
     
     curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" &&\
