@@ -1,9 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/base:0-ubuntu-22.04 as base
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
-ENV ANACONDA_URL "https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh"
-    SHA256SUM "e7ecbccbc197ebd7e1f211c59df2e37bc6959d081f2235d387e08c9026666acd"
-ENV
+ENV ANACONDA_URL "https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh"  
+ENV SHA256SUM "e7ecbccbc197ebd7e1f211c59df2e37bc6959d081f2235d387e08c9026666acd"
 
 RUN set -x && \
     apt-get update --fix-missing && \
