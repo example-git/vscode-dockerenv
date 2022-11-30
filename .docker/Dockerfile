@@ -29,7 +29,8 @@ RUN set -x && \
     mkdir /opt/conda/ &&\
     
     
-    wget $MINIFORGE_URL -O=/opt/conda/$(basename $MINIFORGE_URL) && bash /opt/conda/$(basename $MINIFORGE_URL) -b -p /opt/conda && \
+    curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" &&\
+    bash Mambaforge-$(uname)-$(uname -m).sh -b -p /opt/conda && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc && \
