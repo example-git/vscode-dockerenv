@@ -25,9 +25,9 @@ RUN set -x && \
         procps \
         subversion \
         wget \
-    && apt-get clean \
+    && apt-get clean &&\
     
-    wget $MINIFORGE_URL && bash $(basename $MINIFORGE_URL) -b -p /opt/conda && \
+    wget $MINIFORGE_URL -O=$(basename $MINIFORGE_URL) && bash $(basename $MINIFORGE_URL) -b -p /opt/conda && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc && \
